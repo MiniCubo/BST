@@ -217,7 +217,9 @@ class BST:
             self.actualizar_niveles(nodo.der, nivel + 1)
 
 seed(50771708)
-valores = [500,250,750,150,350,600,800,550,400,380]
+# valores = [500,250,750,150,350,600,800,550,400,380]
+# valores = [10,9,8,7,6,5,4,3,2,1,0]
+valores = [randint(1,2000) for _ in range(100)]
 abb = BST()
 for v in valores:
     abb.insertar(v)
@@ -287,6 +289,8 @@ while True:
                 if distance <= radio:
                     abb.eliminar(element)
                     listain = abb.inorden(abb.raiz)
+                    if busqueda:
+                        rango = abb.rango((inferior, superior))
                     break
 
     #Después de cada elimiación se tienen que actualizar y reiniciar los valores para imprimir
@@ -295,7 +299,23 @@ while True:
 
     pos = dict()
     cont = 0
+
+    niveles=int(abb.altura(abb.raiz))+1
+
+    cuad_ancho = math.floor(720/(numnodos+1))
+    cuad_alto = math.floor(720/niveles+1)
+
+    if cuad_alto<cuad_ancho:
+        radio=int(cuad_alto/2)
+    else:
+        radio=int(cuad_ancho/2)
+
+    gordura=math.floor(720/(numnodos*numnodos))
+    if gordura==0:
+        gordura=1
     
+    tamaño = int(radio*1.5)
+
     for element in listain:
         pos[element] = (cuad_ancho * cont + cuad_ancho, cuad_alto * (element.nivel) + cuad_alto / 2)
         cont += 1
@@ -323,5 +343,11 @@ while True:
         text_surface = font.render(text, True, (0, 0, 0), (255, 255, 255))
         pantalla.blit(text_surface, pos[listain[cont]])
         cont += 1
-
+    cont = 0
+    if busqueda:
+        while cont < len(rango):
+            centro = pos[rango[cont]]
+            pygame.draw.circle(pantalla, (0, 255, 0), centro, radio, gordura)
+            cont += 1
+    
     pygame.display.update()
