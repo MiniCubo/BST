@@ -5,6 +5,8 @@ import sys
 import time
 from random import randint, seed
 
+sys.setrecursionlimit(1000)
+
 class Nodo:
     def __init__(self, valor):
         self.valor = valor
@@ -154,18 +156,19 @@ class BST:
             tamaño += self.tam(nodo.der)
         return tamaño
 
-    def altura(self, nodo):
+    def altura(self, nodo, nivel=0):
+        nodo.nivel = nivel
         if not nodo:
             return 0
         if nodo.izq and nodo.der:
-            if self.altura(nodo.izq) > self.altura(nodo.der):
-                return 1 + self.altura(nodo.izq)
+            if self.altura(nodo.izq, nivel+1) > self.altura(nodo.der, nivel+1):
+                return 1 + self.altura(nodo.izq,nivel+1 )
             else:
-                return 1 + self.altura(nodo.der)
+                return 1 + self.altura(nodo.der,nivel+1)
         elif nodo.izq:
-            return 1 + self.altura(nodo.izq)
+            return 1 + self.altura(nodo.izq,nivel+1)
         elif nodo.der:
-            return 1 + self.altura(nodo.der)
+            return 1 + self.altura(nodo.der,nivel+1)
         else:
             return 0
 
@@ -216,10 +219,47 @@ class BST:
             self.actualizar_niveles(nodo.izq, nivel + 1)
             self.actualizar_niveles(nodo.der, nivel + 1)
 
-seed(50771708)
+    def balancear(self, nodo):
+        if nodo.padre:
+            padre = nodo.padre
+            if padre.der == nodo:
+                if nodo.izq:
+                    nodo.izq.padre = padre
+                padre.der = nodo.izq
+                if padre.padre:
+                    nodo.padre = padre.padre
+                    if padre.padre.izq and padre.padre.izq == padre:
+                        nodo.padre.izq = nodo
+                    else:
+                        nodo.padre.der = nodo
+                else:
+                    nodo.padre = None
+                    self.raiz = nodo
+                padre.padre = nodo
+                nodo.izq = padre
+            if padre.izq == nodo:
+                if nodo.der:
+                    nodo.der.padre = padre
+                padre.izq = nodo.der
+                if padre.padre:
+                    nodo.padre = padre.padre
+                    if padre.padre.izq and padre.padre.izq == padre:
+                        nodo.padre.izq = nodo
+                    else:
+                        nodo.padre.der = nodo
+                else:
+                    nodo.padre = None
+                    self.raiz = nodo
+                padre.padre = nodo
+                nodo.der = padre
+
+    def autobalanceo(self, nodo):
+        print("a")
+
+# seed(50771708)
 # valores = [500,250,750,150,350,600,800,550,400,380]
 # valores = [10,9,8,7,6,5,4,3,2,1,0]
-valores = [randint(1,2000) for _ in range(100)]
+valores = [randint(1,200) for _ in range(21)]
 abb = BST()
 for v in valores:
     abb.insertar(v)
@@ -280,7 +320,8 @@ while True:
         if evento.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
-        if evento.type == pygame.MOUSEBUTTONDOWN: #Hice esta salvajada para detectar los clicks en un nodo
+        
+        if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1: #Hice esta salvajada para detectar los clicks en un nodo
             mouse_x, mouse_y = evento.pos
             for element in listain:
                 centro = pos[element]
@@ -288,6 +329,19 @@ while True:
                 distance = math.sqrt((mouse_x - centro[0]) ** 2 + (mouse_y - centro[1]) ** 2)
                 if distance <= radio:
                     abb.eliminar(element)
+                    listain = abb.inorden(abb.raiz)
+                    if busqueda:
+                        rango = abb.rango((inferior, superior))
+                    break
+
+        if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 3:
+            mouse_x, mouse_y = evento.pos
+            for element in listain:
+                centro = pos[element]
+
+                distance = math.sqrt((mouse_x - centro[0]) ** 2 + (mouse_y - centro[1]) ** 2)
+                if distance <= radio:
+                    abb.balancear(element)
                     listain = abb.inorden(abb.raiz)
                     if busqueda:
                         rango = abb.rango((inferior, superior))
@@ -336,6 +390,13 @@ while True:
         cont += 1
     cont = 0
 
+    if busqueda:
+        while cont < len(rango):
+            centro = pos[rango[cont]]
+            pygame.draw.circle(pantalla, (0, 255, 0), centro, radio, gordura)
+            cont += 1
+    cont = 0
+    
     while cont < numnodos:
         pygame.font.init()
         font = pygame.font.SysFont("Sans Serif", tamaño)
@@ -343,11 +404,5 @@ while True:
         text_surface = font.render(text, True, (0, 0, 0), (255, 255, 255))
         pantalla.blit(text_surface, pos[listain[cont]])
         cont += 1
-    cont = 0
-    if busqueda:
-        while cont < len(rango):
-            centro = pos[rango[cont]]
-            pygame.draw.circle(pantalla, (0, 255, 0), centro, radio, gordura)
-            cont += 1
     
     pygame.display.update()
