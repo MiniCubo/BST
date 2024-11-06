@@ -4,8 +4,8 @@ import math
 import sys
 import time
 from random import randint, seed
+# sys.setrecursionlimit(1000)
 
-sys.setrecursionlimit(1000)
 
 class Nodo:
     def __init__(self, valor):
@@ -36,6 +36,7 @@ class BST:
                     actual.izq = nuevo
                     nuevo.padre = actual
                     nuevo.nivel = nivel
+                    self.autobalanceo(self.raiz)
                     return nuevo
                 actual = actual.izq
                 nivel += 1
@@ -45,6 +46,7 @@ class BST:
                     actual.der = nuevo
                     nuevo.padre = actual
                     nuevo.nivel = nivel
+                    self.autobalanceo(self.raiz)
                     return nuevo
                 actual = actual.der
                 nivel += 1
@@ -157,20 +159,14 @@ class BST:
         return tamaño
 
     def altura(self, nodo, nivel=0):
-        nodo.nivel = nivel
         if not nodo:
             return 0
-        if nodo.izq and nodo.der:
-            if self.altura(nodo.izq, nivel+1) > self.altura(nodo.der, nivel+1):
-                return 1 + self.altura(nodo.izq,nivel+1 )
-            else:
-                return 1 + self.altura(nodo.der,nivel+1)
-        elif nodo.izq:
-            return 1 + self.altura(nodo.izq,nivel+1)
-        elif nodo.der:
-            return 1 + self.altura(nodo.der,nivel+1)
-        else:
-            return 0
+        nodo.nivel = nivel
+
+        altura_izq = self.altura(nodo.izq, nivel + 1)
+        altura_der = self.altura(nodo.der, nivel + 1)
+    
+        return 1 + max(altura_izq, altura_der)
 
     def eliminar(self, nodo):
         if nodo is None:
@@ -254,12 +250,42 @@ class BST:
                 nodo.der = padre
 
     def autobalanceo(self, nodo):
-        print("a")
+        if not nodo:
+            return
+        if not nodo.izq and not nodo.der:
+            return
+        if not nodo.izq:
+            if self.altura(nodo.der) >= 2:
+                print(nodo)
+                self.balancear(nodo.der)
+                self.autobalanceo(nodo.padre)
+            else:
+                return
+        if not nodo.der:
+            if self.altura(nodo.izq) >= 2:
+                self.balancear(nodo.izq)
+                self.autobalanceo(nodo.padre)
+            else:
+                return
+        if nodo.der and nodo.izq:
+            # print(nodo, nodo.izq, nodo.der)
+            if self.altura(nodo.der) <= 2 and self.altura(nodo.izq) <= 2:
+                return
+            if self.altura(nodo.der) - self.altura(nodo.izq) >= 2:
+                self.balancear(nodo.der)
+                self.autobalanceo(nodo.padre)
+            if self.altura(nodo.izq) - self.altura(nodo.der) >= 2:
+                self.balancear(nodo.izq)
+                self.autobalanceo(nodo.padre)
+            if abs(self.altura(nodo.izq) - self.altura(nodo.der)) < 2:
+                self.autobalanceo(nodo.izq)
+                self.autobalanceo(nodo.der)
 
-# seed(50771708)
-# valores = [500,250,750,150,350,600,800,550,400,380]
+
+seed(50771708)
+valores = [500,250,750,150,350,600,800,550,400,380,102,244]
 # valores = [10,9,8,7,6,5,4,3,2,1,0]
-valores = [randint(1,200) for _ in range(21)]
+# valores = [randint(1,2000) for _ in range(101)]
 abb = BST()
 for v in valores:
     abb.insertar(v)
@@ -284,7 +310,7 @@ pantalla = pygame.display.set_mode(window, 0, 32)
 pantalla.fill("white")
 
 numnodos=int(abb.tam(abb.raiz))
-niveles=int(abb.altura(abb.raiz))+1
+niveles=int(abb.altura(abb.raiz))
 
 cuad_ancho = math.floor(720/(numnodos+1))
 cuad_alto = math.floor(720/niveles+1)
@@ -354,7 +380,7 @@ while True:
     pos = dict()
     cont = 0
 
-    niveles=int(abb.altura(abb.raiz))+1
+    niveles=int(abb.altura(abb.raiz))
 
     cuad_ancho = math.floor(720/(numnodos+1))
     cuad_alto = math.floor(720/niveles+1)
