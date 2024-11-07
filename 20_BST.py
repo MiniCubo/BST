@@ -219,7 +219,7 @@ class BST:
 seed(50771708)
 # valores = [500,250,750,150,350,600,800,550,400,380]
 # valores = [10,9,8,7,6,5,4,3,2,1,0]
-valores = [randint(1,2000) for _ in range(100)]
+valores = [randint(1,2000) for _ in range(20)]
 abb = BST()
 for v in valores:
     abb.insertar(v)
