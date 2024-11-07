@@ -255,16 +255,27 @@ class BST:
         if not nodo.izq and not nodo.der:
             return
         if not nodo.izq:
-            if self.altura(nodo.der) >= 2:
-                print(nodo)
-                self.balancear(nodo.der)
-                self.autobalanceo(nodo.padre)
+            if self.altura(nodo.der) > 1:
+                if self.altura(nodo.der.izq) > self.altura(nodo.der.der):
+                    self.balancear(nodo.der.izq)
+                    self.balancear(nodo.der)
+                    self.autobalanceo(nodo.padre)
+                else:
+                    self.balancear(nodo.der.der)
+                    self.balancear(nodo.der)
+                    self.autobalanceo(nodo.padre)
             else:
                 return
         if not nodo.der:
-            if self.altura(nodo.izq) >= 2:
-                self.balancear(nodo.izq)
-                self.autobalanceo(nodo.padre)
+            if self.altura(nodo.izq) > 1:
+                if self.altura(nodo.izq.der) > self.altura(nodo.izq.izq):
+                    self.balancear(nodo.izq.der)
+                    self.balancear(nodo.izq)
+                    self.autobalanceo(nodo.padre)
+                else:
+                    self.balancear(nodo.izq.izq)
+                    self.balancear(nodo.izq)
+                    self.autobalanceo(nodo.padre)
             else:
                 return
         if nodo.der and nodo.izq:
@@ -282,10 +293,12 @@ class BST:
                 self.autobalanceo(nodo.der)
 
 
-seed(50771708)
-valores = [500,250,750,150,350,600,800,550,400,380,102,244]
+# seed(50771708)
+# valores = [500,250,750,150,350,600,800,550,400,380,102,244]
 # valores = [10,9,8,7,6,5,4,3,2,1,0]
-# valores = [randint(1,2000) for _ in range(101)]
+# valores = [611, 776, 801, 1373, 1613, 1595]
+valores = [randint(1,2000) for _ in range(21)]
+print(valores)
 abb = BST()
 for v in valores:
     abb.insertar(v)
