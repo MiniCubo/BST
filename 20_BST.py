@@ -14,6 +14,7 @@ class Nodo:
         self.izq = None
         self.der = None
         self.nivel = 0
+        self.color = None
 
     def __repr__(self):
         return f"{self.valor}"
@@ -26,6 +27,8 @@ class BST:
         if not self.raiz:
             nuevo = Nodo(valor)
             self.raiz = nuevo
+            nuevo.color = "negro"
+            self.insertarRN(nuevo)
             return nuevo
         actual = self.raiz
         nivel = 1
@@ -36,6 +39,8 @@ class BST:
                     actual.izq = nuevo
                     nuevo.padre = actual
                     nuevo.nivel = nivel
+                    nuevo.color = "rojo"
+                    self.insertarRN(nuevo)
                     return nuevo
                 actual = actual.izq
                 nivel += 1
@@ -45,12 +50,14 @@ class BST:
                     actual.der = nuevo
                     nuevo.padre = actual
                     nuevo.nivel = nivel
+                    nuevo.color = "rojo"
+                    self.insertarRN(nuevo)
                     return nuevo
                 actual = actual.der
                 nivel += 1
             if valor == actual.valor:
                 return actual
-
+                
     def ancestros(self, nodo):
         actual = nodo
         l = [actual]
@@ -222,10 +229,16 @@ class BST:
     def balancear(self, nodo):
         if nodo.padre:
             padre = nodo.padre
+            padre.color = "rojo"
+            nodo.color = "negro"
             if padre.der == nodo:
                 if nodo.izq:
                     nodo.izq.padre = padre
                 padre.der = nodo.izq
+                if padre.der:
+                    padre.der.color = "negro"
+                if padre.izq:
+                    padre.izq.color = "negro"
                 if padre.padre:
                     nodo.padre = padre.padre
                     if padre.padre.izq and padre.padre.izq == padre:
@@ -240,7 +253,12 @@ class BST:
             if padre.izq == nodo:
                 if nodo.der:
                     nodo.der.padre = padre
+                    padre.der.color = "negro"
                 padre.izq = nodo.der
+                if padre.der:
+                    padre.der.color = "negro"
+                if padre.izq:
+                    padre.izq.color = "negro"
                 if padre.padre:
                     nodo.padre = padre.padre
                     if padre.padre.izq and padre.padre.izq == padre:
@@ -253,13 +271,62 @@ class BST:
                 padre.padre = nodo
                 nodo.der = padre
 
+    def blackDepth(self, nodo):
+        if not nodo:
+            return 0
+
+    def insertarRN(self, nodo):
+        if not nodo.padre:
+            nodo.color = "negro"
+
+        elif nodo.padre.color == "rojo":
+            padre = nodo.padre
+            if padre.padre.der and padre == padre.padre.der:
+                #Bien
+                if not padre.padre.izq or padre.padre.izq.color == "negro":
+                    #Bien
+                    if padre.valor > nodo.valor:
+                        # padre.padre.color = "rojo"
+                        # padre.color = "rojo"
+                        # nodo.color = "negro"
+                        self.balancear(nodo)
+                        self.balancear(nodo)
+                    #Bien
+                    else:
+                        # padre.padre.color= "rojo"
+                        # padre.color = "negro"
+                        self.balancear(padre)
+                #Bien
+                else:
+                    padre.color = "negro"
+                    padre.padre.izq.color = "negro"
+                    padre.padre.color = "rojo"
+                    self.insertarRN(padre.padre)
+            elif padre.padre.izq and padre == padre.padre.izq:
+                if not padre.padre.der or padre.padre.der.color == "negro":
+                    if padre.valor < nodo.valor:
+                        # padre.padre.color = "rojo"
+                        # padre.color = "rojo"
+                        # nodo.color = "negro"
+                        self.balancear(nodo)
+                        self.balancear(nodo)
+                    else:
+                        # padre.padre.color= "rojo"
+                        # padre.color = "negro"
+                        self.balancear(padre)
+                else:
+                    padre.color = "negro"
+                    padre.padre.der.color = "negro"
+                    padre.padre.color = "rojo"
+                    self.insertarRN(padre.padre)
+    
     def autobalanceo(self, nodo):
         print("a")
 
 # seed(50771708)
-# valores = [500,250,750,150,350,600,800,550,400,380]
-# valores = [10,9,8,7,6,5,4,3,2,1,0]
-valores = [randint(1,200) for _ in range(21)]
+valores = [500,250,750,150,350,600,800,550,400,380]
+# valores = [1,2,3,4,5,6,7,8,9,10]
+# valores = [randint(1,200) for _ in range(101)]
 abb = BST()
 for v in valores:
     abb.insertar(v)
@@ -379,7 +446,11 @@ while True:
 
     while cont < numnodos:
         centro = pos[listain[cont]]
-        pygame.draw.circle(pantalla, (255, 0, 0), centro, radio, gordura)
+        if listain[cont].color == "negro":
+            color = (0,0,0)
+        else:
+            color = (255,0,0)
+        pygame.draw.circle(pantalla, color, centro, radio, gordura)
         cont += 1
     cont = 0
     
