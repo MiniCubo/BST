@@ -183,10 +183,12 @@ class BST:
         if nodo is None:
             return
 
+        self.borrarRN(nodo)
         if nodo.izq is None and nodo.der is None:  #Si es hoja
             if nodo.padre:  #Si tiene padre
                 if nodo.padre.izq == nodo:
                     nodo.padre.izq = None
+                    
                 else:
                     nodo.padre.der = None
             else:  #Si no, entonces es raiz
@@ -216,6 +218,7 @@ class BST:
             reemplazo = self.maximo(nodo.izq)  #Se consigue el mayor del hijo izquierdo
             nodo.valor = reemplazo.valor  #Cambiar los valores
             self.eliminar(reemplazo)  #Se elimina el reemplazo
+            self.borrarRN(nodo)
 
         #Ya eliminado se sube toda la descendencia del nodo
         self.actualizar_niveles(self.raiz)
@@ -229,16 +232,11 @@ class BST:
     def balancear(self, nodo):
         if nodo.padre:
             padre = nodo.padre
-            padre.color = "rojo"
-            nodo.color = "negro"
+            
             if padre.der == nodo:
                 if nodo.izq:
                     nodo.izq.padre = padre
                 padre.der = nodo.izq
-                if padre.der:
-                    padre.der.color = "negro"
-                if padre.izq:
-                    padre.izq.color = "negro"
                 if padre.padre:
                     nodo.padre = padre.padre
                     if padre.padre.izq and padre.padre.izq == padre:
@@ -253,7 +251,6 @@ class BST:
             if padre.izq == nodo:
                 if nodo.der:
                     nodo.der.padre = padre
-                    padre.der.color = "negro"
                 padre.izq = nodo.der
                 if padre.der:
                     padre.der.color = "negro"
@@ -274,6 +271,13 @@ class BST:
     def blackDepth(self, nodo):
         if not nodo:
             return 0
+        izq = self.blackDepth(nodo.izq)
+        der = self.blackDepth(nodo.der)
+        if nodo.color == "negro":
+            return 1 + max(izq, der)
+        else:
+            return 0 + max(izq, der)
+
 
     def insertarRN(self, nodo):
         if not nodo.padre:
@@ -286,15 +290,15 @@ class BST:
                 if not padre.padre.izq or padre.padre.izq.color == "negro":
                     #Bien
                     if padre.valor > nodo.valor:
-                        # padre.padre.color = "rojo"
-                        # padre.color = "rojo"
-                        # nodo.color = "negro"
+                        nodo.color = "negro"
+                        padre.color = "rojo"
+                        padre.padre.color = "rojo"
                         self.balancear(nodo)
                         self.balancear(nodo)
                     #Bien
                     else:
-                        # padre.padre.color= "rojo"
-                        # padre.color = "negro"
+                        padre.color = "negro"
+                        padre.padre.color = "rojo"
                         self.balancear(padre)
                 #Bien
                 else:
@@ -305,14 +309,14 @@ class BST:
             elif padre.padre.izq and padre == padre.padre.izq:
                 if not padre.padre.der or padre.padre.der.color == "negro":
                     if padre.valor < nodo.valor:
-                        # padre.padre.color = "rojo"
-                        # padre.color = "rojo"
-                        # nodo.color = "negro"
+                        nodo.color = "negro"
+                        padre.color = "rojo"
+                        padre.padre.color = "rojo"
                         self.balancear(nodo)
                         self.balancear(nodo)
                     else:
-                        # padre.padre.color= "rojo"
-                        # padre.color = "negro"
+                        padre.color = "negro"
+                        padre.padre.color = "rojo"
                         self.balancear(padre)
                 else:
                     padre.color = "negro"
@@ -320,22 +324,70 @@ class BST:
                     padre.padre.color = "rojo"
                     self.insertarRN(padre.padre)
     
-    def autobalanceo(self, nodo):
-        print("a")
+    def borrarRN(self, nodo):
+        if nodo.color == "rojo":
+            return
+        if not nodo.padre:
+            return
+            
+        # if nodo.der and not nodo.izq:
+        #     nodo.der.color == "negro"
+        # if not nodo.der and nodo.izq:
+        #     nodo.izq.color == "negro"
+
+        if nodo == nodo.padre.der:
+            der = self.blackDepth(nodo)
+            izq = self.blackDepth(nodo.padre.izq)
+            if der > izq:
+                tHeavy, tLight = nodo, nodo.padre.izq
+            else:
+                tLight, tHeavy = nodo, nodo.padre.izq
+        else:
+            der = self.blackDepth(nodo.padre.der)
+            izq = self.blackDepth(nodo)
+            if der > izq:
+                tHeavy, tLight = nodo.padre.der, nodo
+            else:
+                tLight, tHeavy = nodo.padre.der, nodo
+        
+        if tHeavy.color == "negro":
+            if tHeavy.der and tHeavy.der.color == "rojo":
+                der = tHeavy.der
+                tHeavy.der.color = tHeavy.padre.color
+                tHeavy.padre.color = "negro"
+                self.balancear(der)
+                self.balancear(der)
+            elif tHeavy.izq and tHeavy.izq.color == "rojo":  
+                izq = tHeavy.izq
+                tHeavy.izq.color = tHeavy.padre.color
+                tHeavy.padre.color = "negro"
+                self.balancear(izq)
+                self.balancear(izq)
+
+            elif not tHeavy.der and not tHeavy.izq:
+                tHeavy.padre.color = "negro"
+                tHeavy.color = "rojo"
+            else:
+                if tHeavy.der and tHeavy.der.color == "negro":
+                    tHeavy.padre.color = "negro"
+                    tHeavy.color = "rojo"
+                elif tHeavy.izq and tHeavy.izq.color == "negro":
+                    tHeavy.padre.color = "negro"
+                    tHeavy.color = "rojo"
+        else:
+            padre = tHeavy.padre
+            tHeavy.padre.color = "rojo"
+            tHeavy.color = "negro"
+            self.balancear(tHeavy)
+            self.borrarRN(padre)
 
 # seed(50771708)
-valores = [500,250,750,150,350,600,800,550,400,380]
-# valores = [1,2,3,4,5,6,7,8,9,10]
-# valores = [randint(1,200) for _ in range(101)]
+# valores = [500,250,750,150,350,600,800,550,400,380]
+# valores = [4,7,12,15,3,5,14,18,16,17]
+valores = [randint(1,400) for _ in range(22)]
 abb = BST()
 for v in valores:
     abb.insertar(v)
-
-# print(abb.inorden(abb.raiz))
-# pivote = abb.buscar(750)
-# print(pivote)
-# print(abb.eliminar(pivote))
-# print(abb.inorden(abb.raiz))
 
 busqueda = input("1 if you want to make a search of ranges, 0 to decline") == '1'
 if busqueda:
